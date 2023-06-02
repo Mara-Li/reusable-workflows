@@ -37,13 +37,13 @@ jobs:
           echo "## Release ${{ env. VERSION }}" >> $GITHUB_STEP_SUMMARY
       - name: Create zip
         run: |
-          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+          zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
       - name: Delete release if workflow dispatch
         if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
-        run: gh release delete ${{ env.VERSION }} -R ${{ github.repository }} -y
+        run: gh release delete ${{ inputs.VERSION }} -R ${{ github.repository }} -y
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Create changelog
