@@ -1,0 +1,14 @@
+name: Release
+"on":
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+permissions:
+  contents: write
+jobs:
+    uses: lisandra-dev/reusable-workflows/.github/workflows/obsidian-plugin-publish.yaml@main
+    with:
+        PLUGIN_NAME: "my-plugin"
+    secrets: 
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
