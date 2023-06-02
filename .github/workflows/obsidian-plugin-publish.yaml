@@ -10,6 +10,7 @@ on:
         description: "If you use a styles.css file, set this to true"
         required: false
         type: boolean
+        default: false
     secrets:
       GH_TOKEN:
         description: "Github token"
@@ -43,7 +44,7 @@ jobs:
       - name: Delete release if workflow dispatch
         if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
-        run: gh release delete ${{ inputs.VERSION }} -R ${{ github.repository }} -y
+        run: gh release delete ${{ env.VERSION }} -R ${{ github.repository }} -y
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Create changelog
@@ -51,10 +52,10 @@ jobs:
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create Release with css
-        if: inputs.STYLE == 'true'
+        if: inputs.STYLE
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
         with:
           tag_name: "${{ env.VERSION }}"
@@ -62,14 +63,14 @@ jobs:
           body_path: CHANGELOG-LATEST.md
           draft: false
           prerelease: false
-          token: "${{ secrets.GITHUB_TOKEN }}"
+          token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
-        if: inputs.STYLE == 'false'
+        if: ${{ !inputs.STYLE }}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
