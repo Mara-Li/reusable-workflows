@@ -4,7 +4,7 @@ name: Release
 permissions:
   contents: write
 jobs:
-  run:
+  bump:
     uses: lisandra-dev/reusable-workflows/.github/workflows/bump.yaml@main
     with:
         PLUGIN_NAME: "my-plugin"
