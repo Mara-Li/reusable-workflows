@@ -1,16 +1,20 @@
 name: Bump and release version
-on:
-    workflow_call:
-      inputs:
-        PLUGIN_NAME: 
-          required: true
-          type: string
-        STYLE:
-          required: false
-          type: boolean
-      secrets:
-        GH_TOKEN:
-          required: true
+on: 
+  workflow_call:
+    inputs:
+      PLUGIN_NAME:
+        description: "id of your plugin"
+        required: true
+        type: string
+      STYLE:
+        description: "If you use a styles.css file, set this to true"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      GH_TOKEN:
+        description: "Github token"
+        required: true
 
 jobs:
   release:
@@ -44,7 +48,7 @@ jobs:
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create Release with css
-        if: inputs.STYLE 
+        if: ${{ inputs.STYLE && !env.ACT }}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
@@ -62,7 +66,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
-        if: ${{ !inputs.STYLE}}
+        if: ${{ !inputs.STYLE && !env.ACT }}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"

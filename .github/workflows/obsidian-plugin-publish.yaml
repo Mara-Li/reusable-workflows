@@ -42,7 +42,7 @@ jobs:
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
       - name: Delete release if workflow dispatch
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ github.event_name == 'workflow_dispatch' && !env.ACT }}
         continue-on-error: true
         run: gh release delete ${{ env.VERSION }} -R ${{ github.repository }} -y
         env:
@@ -52,7 +52,7 @@ jobs:
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create Release with css
-        if: inputs.STYLE
+        if: ${{ inputs.STYLE && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
@@ -70,7 +70,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
-        if: ${{ !inputs.STYLE }}
+        if: ${{ !inputs.STYLE && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"

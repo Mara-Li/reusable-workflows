@@ -7,6 +7,7 @@ name: Release
 permissions:
   contents: write
 jobs:
+  run:
     uses: lisandra-dev/reusable-workflows/.github/workflows/obsidian-plugin-publish.yaml@main
     with:
         PLUGIN_NAME: "my-plugin"
