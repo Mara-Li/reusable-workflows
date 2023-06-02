@@ -30,7 +30,7 @@ You default `package.json` must look like this:
         "commit-and-tag-version": "^11.0.0"
     }
 }
-
+```
 ### Bump 
 
 Bump the version of the plugin based on the manifest.json file. It will use the `commit-and-tag-version` npm package to bump the version and create a tag. 
