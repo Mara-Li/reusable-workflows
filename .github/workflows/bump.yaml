@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: false
+      BRANCH:
+        description: "Main branch"
+        type: string
+        required: false
+        default: "master"
     secrets:
       GH_TOKEN:
         description: "Github token"
@@ -83,4 +88,4 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
       - name: Push updated changes
-        run: git push --follow-tags origin master
+        run: git push --follow-tags origin ${{ inputs.BRANCH }}
