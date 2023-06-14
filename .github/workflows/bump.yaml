@@ -28,11 +28,9 @@ on:
       AUTHOR_EMAIL:
         description: "Author email"
         required: false
-        default: "github-actions[bot]@users.noreply.github.com"
       AUTHOR_NAME:
         description: "Author name"
         required: false
-        default: "github-actions[bot]"
 
 jobs:
   release-latest:
