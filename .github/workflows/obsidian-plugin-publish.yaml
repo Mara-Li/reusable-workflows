@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: false
+      BETA:
+        description: "Publish a beta release ?"
+        required: false
+        type: boolean
+        default: false
     secrets:
       GH_TOKEN:
         description: "Github token"
@@ -48,8 +53,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Create changelog
+        if: ${{ !inputs.BETA || !contains(env.VERSION, '-') }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
+          cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
+      - name: Create beta changelog
+        if: ${{ inputs.BETA || contains(env.VERSION, '-') }}
+        run: |
+          npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create Release with css
         if: ${{ inputs.STYLE && !env.ACT}}
