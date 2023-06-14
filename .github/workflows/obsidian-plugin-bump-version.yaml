@@ -33,6 +33,17 @@ on:
         required: false
 
 jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Echo
+      run: |
+        echo "### Inputs" >> $GITHUB_STEP_SUMMARY
+        echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+        echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
+        echo "BRANCH: ${{ inputs.BRANCH }}" >> $GITHUB_STEP_SUMMARY
+        echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
+
   release-latest:
     if: ${{ github.event.inputs.BETA == false || !github.event.inputs.BETA }}
     runs-on: ubuntu-latest

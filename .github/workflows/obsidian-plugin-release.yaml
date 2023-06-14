@@ -22,6 +22,15 @@ on:
         required: true
 
 jobs:
+  echo-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo inputs
+        run: |
+          echo "## Inputs" >> $GITHUB_STEP_SUMMARY
+          echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
+          echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
   release:
     runs-on: ubuntu-latest
     steps:
