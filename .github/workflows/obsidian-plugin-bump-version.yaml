@@ -172,9 +172,9 @@ jobs:
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GH_TOKEN }}
-          branch: ${{ inputs.BRANCH }}
-          author_name: ${{ inputs.AUTHOR_NAME }}
-          author_email: ${{ inputs.AUTHOR_EMAIL }}
+          branch: ${{ inputs.BRANCH || 'master' }}
+          author_name: ${{ secrets.AUTHOR_NAME || 'github-actions[bot]' }}
+          author_email: ${{ secrets.AUTHOR_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}
           
 
 
