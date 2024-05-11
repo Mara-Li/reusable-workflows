@@ -54,6 +54,8 @@ jobs:
           echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
           echo "BRANCH: ${{ inputs.BRANCH }}" >> $GITHUB_STEP_SUMMARY
           echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
+          echo "SUBMODULE: ${{ inputs.SUBMODULE }}" >> $GITHUB_STEP_SUMMARY
+          echo "CACHE: ${{ inputs.CACHE }}" >> $GITHUB_STEP_SUMMARY
 
   release-latest:
     if: ${{ !inputs.BETA }}

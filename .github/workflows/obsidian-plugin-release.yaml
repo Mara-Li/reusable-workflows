@@ -41,6 +41,8 @@ jobs:
           echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
           echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
+          echo "SUBMODULE: ${{ inputs.SUBMODULE }}" >> $GITHUB_STEP_SUMMARY
+          echo "CACHE: ${{ inputs.CACHE }}" >> $GITHUB_STEP_SUMMARY
   release:
     runs-on: ubuntu-latest
     env:
