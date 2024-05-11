@@ -61,7 +61,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
       - name: Install PNPM
         if: ${{ inputs.CACHE == 'pnpm'}}
-        run: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v3
       - name: Install Yarn
         if: ${{ inputs.CACHE == 'yarn'}}
         run: npm install -g yarn
