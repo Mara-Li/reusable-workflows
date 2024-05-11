@@ -87,7 +87,7 @@ jobs:
         if: ${{ inputs.CACHE == 'pnpm'}}
         run: |
           pnpm install
-          pnpm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+          pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version
         id: tags
         run: |

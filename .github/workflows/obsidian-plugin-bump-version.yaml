@@ -118,7 +118,7 @@ jobs:
         run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'npm' }}
       - name: build (pnpm)
-        run: pnpm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+        run: pnpm run build  --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'pnpm' }}
       - name: build (yarn)
         run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
@@ -225,7 +225,7 @@ jobs:
         if: ${{ inputs.CACHE == 'npm' }}
         run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: build (pnpm)
-        run: pnpm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+        run: pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'pnpm' }}
       - name: build (yarn)
         run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
