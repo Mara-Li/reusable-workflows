@@ -1,5 +1,5 @@
 name: Bump and release version
-on: 
+on:
   workflow_call:
     inputs:
       PLUGIN_NAME:
@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      SUBMODULE:
+        description: "If your plugin is a submodule, set this to true"
+        required: false
+        type: boolean
+        default: false
     secrets:
       GH_TOKEN:
         description: "Github token"
@@ -35,20 +40,33 @@ on:
 jobs:
   echo:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Echo
-      run: |
-        echo "### Inputs" >> $GITHUB_STEP_SUMMARY
-        echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
-        echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
-        echo "BRANCH: ${{ inputs.BRANCH }}" >> $GITHUB_STEP_SUMMARY
-        echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
+      - name: Echo
+        run: |
+          echo "### Inputs" >> $GITHUB_STEP_SUMMARY
+          echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
+          echo "BRANCH: ${{ inputs.BRANCH }}" >> $GITHUB_STEP_SUMMARY
+          echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
 
   release-latest:
     if: ${{ !inputs.BETA }}
+    env:
+      ACT: ${{ github.event_name == 'workflow_dispatch' }}
+      SUBMODULE: ${{ inputs.SUBMODULE }}
+      VERSION: ""
+
     runs-on: ubuntu-latest
     steps:
+      - name: rename submodule env
+        if: ${{ inputs.SUBMODULE}}
+        run: |
+          echo "SUBMODULE=recursive" >> $GITHUB_ENV
       - uses: actions/checkout@v3
+        with:
+          submodules: ${{ env.SUBMODULE }}
+          token: ${{ secrets.GH_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -114,9 +132,20 @@ jobs:
         run: git push --follow-tags origin ${{ inputs.BRANCH }}
   release-beta:
     if: ${{ inputs.BETA }}
+    env:
+      ACT: ${{ github.event_name == 'workflow_dispatch' }}
+      SUBMODULE: ${{ inputs.SUBMODULE }}
+      VERSION: ""
     runs-on: ubuntu-latest
     steps:
+      - name: rename submodule env
+        if: ${{ inputs.SUBMODULE}}
+        run: |
+          echo "SUBMODULE=recursive" >> $GITHUB_ENV
       - uses: actions/checkout@v3
+        with:
+          submodules: ${{ env.SUBMODULE }}
+          token: ${{ secrets.GH_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -184,7 +213,3 @@ jobs:
           branch: ${{ inputs.BRANCH || 'master' }}
           author_name: ${{ secrets.AUTHOR_NAME || 'github-actions[bot]' }}
           author_email: ${{ secrets.AUTHOR_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}
-          
-
-
-      
