@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      CACHE:
+        description: "Cache to use (npm, pnpm, yarn)"
+        required: false
+        type: string
+        default: "npm"
     secrets:
       GH_TOKEN:
         description: "Github token"
@@ -52,16 +57,33 @@ jobs:
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
+      - name: Install PNPM
+        if: ${{ inputs.CACHE == 'pnpm'}}
+        run: pnpm/action-setup@v3
+      - name: Install Yarn
+        if: ${{ inputs.CACHE == 'yarn'}}
+        run: npm install -g yarn
 
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Build
-        id: build
+          cache: ${{ inputs.cache }}
+      - name: Build (npm)
+        if: ${{ inputs.CACHE == 'pnpm'}}
         run: |
           npm install
           npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+      - name: Build (yarn)
+        if: ${{ inputs.CACHE == 'yarn'}}
+        run: |
+          yarn install
+          yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+      - name: Guild (pnpm)
+        if: ${{ inputs.CACHE == 'pnpm'}}
+        run: |
+          pnpm install
+          pnpm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version
         id: tags
         run: |
