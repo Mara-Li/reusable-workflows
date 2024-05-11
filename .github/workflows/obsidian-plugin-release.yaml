@@ -62,6 +62,8 @@ jobs:
       - name: Install PNPM
         if: ${{ inputs.CACHE == 'pnpm'}}
         uses: pnpm/action-setup@v3
+        with:
+          version: 9
       - name: Install Yarn
         if: ${{ inputs.CACHE == 'yarn'}}
         run: npm install -g yarn
