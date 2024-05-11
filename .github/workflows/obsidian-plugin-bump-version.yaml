@@ -222,8 +222,8 @@ jobs:
           echo "### VERSION : ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo ${{ env.VERSION }}
       - name: build (npm)
-        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'npm' }}
+        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: build (pnpm)
         run: pnpm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'pnpm' }}

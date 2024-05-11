@@ -74,7 +74,7 @@ jobs:
           node-version: 18
           cache: ${{ inputs.cache }}
       - name: Build (npm)
-        if: ${{ inputs.CACHE == 'pnpm'}}
+        if: ${{ inputs.CACHE == 'npm'}}
         run: |
           npm install
           npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
