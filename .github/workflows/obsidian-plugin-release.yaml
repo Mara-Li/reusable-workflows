@@ -83,7 +83,7 @@ jobs:
         run: |
           yarn install
           yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
-      - name: Guild (pnpm)
+      - name: build (pnpm)
         if: ${{ inputs.CACHE == 'pnpm'}}
         run: |
           pnpm install
