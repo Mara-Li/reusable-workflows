@@ -48,7 +48,6 @@ jobs:
     env:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
-      ACT: ${{ github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Set to recursive
         if: ${{ inputs.SUBMODULE }}

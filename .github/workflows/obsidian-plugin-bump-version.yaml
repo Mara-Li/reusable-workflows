@@ -60,7 +60,6 @@ jobs:
   release-latest:
     if: ${{ !inputs.BETA }}
     env:
-      ACT: ${{ github.event_name == 'workflow_dispatch' }}
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
 
@@ -173,7 +172,6 @@ jobs:
   release-beta:
     if: ${{ inputs.BETA }}
     env:
-      ACT: ${{ github.event_name == 'workflow_dispatch' }}
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
     runs-on: ubuntu-latest
