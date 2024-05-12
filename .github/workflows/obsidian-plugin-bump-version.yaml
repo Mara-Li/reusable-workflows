@@ -65,6 +65,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Verify Inputs for cache
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
+        run: |
+          echo "::error::CACHE must be one of npm, pnpm or yarn"
+          exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
         run: |
@@ -176,6 +181,11 @@ jobs:
       VERSION: ""
     runs-on: ubuntu-latest
     steps:
+      - name: Verify inputs for cache
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
+        run: |
+          echo "::error::CACHE must be one of npm, pnpm or yarn"
+          exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
         run: |

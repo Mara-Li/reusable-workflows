@@ -49,6 +49,11 @@ jobs:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
     steps:
+      - name: verify inputs
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
+        run: |
+          echo "::error::CACHE must be one of npm, pnpm or yarn"
+          exit 1
       - name: Set to recursive
         if: ${{ inputs.SUBMODULE }}
         run: |
