@@ -142,8 +142,8 @@ jobs:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
+          prerelease: ${{inputs.BETA}}
           draft: false
-          prerelease: false
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -161,7 +161,7 @@ jobs:
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: false
+          prerelease: ${{inputs.BETA}}
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -248,7 +248,7 @@ jobs:
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: false
+          prerelease: ${{inputs.BETA}}
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -266,7 +266,7 @@ jobs:
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: false
+          prerelease: ${{inputs.BETA}}
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
