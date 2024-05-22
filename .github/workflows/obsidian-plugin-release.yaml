@@ -66,7 +66,6 @@ jobs:
       - name: Install Yarn
         if: ${{ inputs.CACHE == 'yarn'}}
         run: npm install -g yarn
-
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
