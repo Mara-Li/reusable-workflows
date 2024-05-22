@@ -119,15 +119,14 @@ jobs:
           echo "### VERSION : ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo ${{ env.VERSION }}
       - name: build (npm)
-        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'npm' }}
+        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: build (pnpm)
-        run: pnpm run build  --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'pnpm' }}
+        run: pnpm run build  --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: build (yarn)
-        run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'yarn' }}
-
+        run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Zip files
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
@@ -147,7 +146,7 @@ jobs:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
-          prerelease: ${{inputs.BETA}}
+          prerelease: false
           draft: false
           token: "${{ secrets.GH_TOKEN }}"
           files: |
@@ -166,7 +165,7 @@ jobs:
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: ${{inputs.BETA}}
+          prerelease: false
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -258,7 +257,7 @@ jobs:
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: ${{inputs.BETA}}
+          prerelease: true
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -276,7 +275,7 @@ jobs:
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: ${{inputs.BETA}}
+          prerelease: true
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip

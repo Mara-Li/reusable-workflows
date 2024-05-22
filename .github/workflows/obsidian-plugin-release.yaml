@@ -11,11 +11,6 @@ on:
         required: false
         type: boolean
         default: false
-      BETA:
-        description: "Publish a beta release ?"
-        required: false
-        type: boolean
-        default: false
       SUBMODULE:
         description: "If your plugin is a submodule, set this to true"
         required: false
@@ -40,7 +35,6 @@ jobs:
           echo "## Inputs" >> $GITHUB_STEP_SUMMARY
           echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "STYLE: ${{ inputs.STYLE }}" >> $GITHUB_STEP_SUMMARY
-          echo "BETA: ${{ inputs.BETA }}" >> $GITHUB_STEP_SUMMARY
           echo "SUBMODULE: ${{ inputs.SUBMODULE }}" >> $GITHUB_STEP_SUMMARY
           echo "CACHE: ${{ inputs.CACHE }}" >> $GITHUB_STEP_SUMMARY
   release:
@@ -48,6 +42,7 @@ jobs:
     env:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
+      PRERELEASE: false
     steps:
       - name: verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
@@ -98,6 +93,7 @@ jobs:
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
           echo ${{ env.VERSION }}
           echo "## Release ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "PRERELEASE=$(node -p "require('./package.json').version.includes('-')")" >> $GITHUB_ENV
       - name: Create zip
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
@@ -110,12 +106,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Create changelog
-        if: ${{ !inputs.BETA || !contains(env.VERSION, '-') }}
+        if: ${{ !env.PRERELEASE }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create beta changelog
-        if: ${{ inputs.BETA || contains(env.VERSION, '-') }}
+        if: ${{ env.PRERELEASE }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
@@ -125,12 +121,13 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
+          PRELEASE: ${{ env.PRERELEASE }}
         with:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: ${{ inputs.BETA }}
+          prerelease: ${{ env.PRELEASE }}
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -143,12 +140,13 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
+          PRELEASE: ${{ env.PRERELEASE }}
         with:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: ${{ inputs.BETA }}
+          prerelease: ${{ env.PRERELEASE }}
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
