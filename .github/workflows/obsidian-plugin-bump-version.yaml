@@ -74,6 +74,10 @@ jobs:
         if: ${{ inputs.SUBMODULE}}
         run: |
           echo "SUBMODULE=recursive" >> $GITHUB_ENV
+      - name: Configure github
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - uses: actions/checkout@v3
         with:
           submodules: ${{ env.SUBMODULE }}
@@ -83,50 +87,35 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 9
-      - name: Install yarn
-        if: ${{ inputs.CACHE == 'yarn' }}
-        run: npm install -g yarn
-
       - uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: ${{ inputs.CACHE }}
-      - name: Install dependencies (npm)
-        run: npm install
-        if: ${{ inputs.CACHE == 'npm' }}
-      - name: Install dependencies (pnpm)
-        run: pnpm install
-        if: ${{ inputs.CACHE == 'pnpm' }}
-      - name: Install dependencies (yarn)
-        run: yarn install
+      - name: Install yarn
         if: ${{ inputs.CACHE == 'yarn' }}
-      - name: Configure github
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Bump version (npm)
-        run: |
-          npm run bump --ignore-scripts
-      - name: Bump version (pnpm)
-        run: |
-          pnpm run bump --ignore-scripts
-      - name: Bump version (yarn)
-        run: |
+          npm install -g yarn
+          yarn install
           yarn run bump --ignore-scripts
+          yarn run build -- --output-dir ${{ inputs.PLUGIN_NAME }}
+      - name: Install dependencies (npm)
+        if: ${{ inputs.CACHE == 'npm' }}
+        run: |
+          npm install
+          npm run bump --ignore-scripts
+          npm run build -- --output-dir ${{ inputs.PLUGIN_NAME }}
+      - name: Install dependencies (pnpm)
+        if: ${{ inputs.CACHE == 'pnpm' }}
+        run: |
+          pnpm install
+          pnpm run bump --ignore-scripts
+          pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version number
         run: |
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
           echo "### VERSION : ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo ${{ env.VERSION }}
-      - name: build (npm)
-        if: ${{ inputs.CACHE == 'npm' }}
-        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
-      - name: build (pnpm)
-        if: ${{ inputs.CACHE == 'pnpm' }}
-        run: pnpm run build  --output-dir ${{ inputs.PLUGIN_NAME }}
-      - name: build (yarn)
-        if: ${{ inputs.CACHE == 'yarn' }}
-        run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+
       - name: Zip files
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
