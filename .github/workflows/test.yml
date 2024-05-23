@@ -14,6 +14,6 @@ jobs:
           echo "The BOOLEAN is true"
 
       - name: Check NOT BOOLEAN
-        if: ${{ fromJSON(env.BOOLEAN) }}
+        if: ${{ !fromJSON(env.BOOLEAN) }}
         run: |
           echo "The BOOLEAN is false"
