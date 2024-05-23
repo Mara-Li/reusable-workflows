@@ -105,17 +105,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Create changelog
-        if: ${{ !env.PRERELEASE }}
+        if: ${{ !fromJson(env.PRERELEASE) }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create beta changelog
-        if: ${{ env.PRERELEASE }}
+        if: ${{ fromJson(env.PRERELEASE) }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Create Release with css
-        if: ${{ inputs.STYLE && !env.ACT}}
+        if: ${{ fromJson(inputs.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
@@ -134,7 +134,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
-        if: ${{ !inputs.STYLE && !env.ACT}}
+        if: ${{ !fromJson(inputs.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
