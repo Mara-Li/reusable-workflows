@@ -3,7 +3,7 @@ description: Fill a bug report
 title: "[Bug]: "
 labels: ["bug"]
 assignees:
-  - lisandra-dev
+  - mara-li
 body:
   - type: markdown
     attributes:
