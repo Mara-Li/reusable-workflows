@@ -19,7 +19,6 @@ On tags, release the plugin on the release page. You can also use a manual trigg
 | `GH_TOKEN`    | secrets | string  | true     | Your github token           | `secrets.GITHUB_TOKEN`                                                                                                         |
 | `PLUGIN_NAME` | inputs  | string  | true     | You plugin ID (in manifest) |                                                                                                                                |
 | `STYLE`       | inputs  | boolean | false    | If you use `styles.css`     | false                                                                                                                          |
-| `BETA`        | inputs  | boolean | false    | false                       | Publish a beta release (without needing a beta version first). It just change the changelog used to generate the release note. |
 
 As it uses some package for the building, you need to use [`obsidian-cli`](https://www.npmjs.com/package/obsidian-plugin-cli) to run it.
 
@@ -66,11 +65,11 @@ Set `BETA` to `true` to publish a beta version. It will:
 - Use the `CHANGELOG-beta.md` file to generate the release note
 
 > **Note**  
-> To use the `beta` option, you need to update your `package.json` and add this [script](https://github.com/Lisandra-dev/create-obsidian-plugin/blob/master/src/templates/commit-and-tag-version.js.ejs). 
+> To use the `beta` option, you need to update your `package.json` and add this [script](https://github.com/mara-li/create-obsidian-plugin/blob/master/src/templates/commit-and-tag-version.js.ejs). 
 > Don't forget to remove the `.ejs` extension.
 
 Update your `package.json` as follow:
-```json
+```jsonc
     //...
     "scripts": {
 		"bump": "node commit-and-tag-version.js"
