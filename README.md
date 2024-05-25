@@ -26,9 +26,9 @@ After bumping version, the plugin will be released on the release page.
 
 You default `package.json` must look like this:
 
-```json
+```jsonc
 {
-    ...
+    //...
     "scripts": {
         "build": "obsidian-plugin build [ENTRYPOINT]",
         "bump": "commit-and-tag-version"
