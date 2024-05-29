@@ -21,6 +21,14 @@ on:
         required: false
         type: string
         default: "npm"
+      discord_webhook_avatar:
+        description: "Avatar URL for the discord webhook"
+        required: false
+        type: string
+      discord_webhook_name:
+        description: "Username for the discord webhook"
+        required: false
+        type: string
     secrets:
       GH_TOKEN:
         description: "Github token"
@@ -168,6 +176,9 @@ jobs:
         uses: tsickert/discord-webhook@v5.3.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-          content: |
-            ## ${{env.TAG_BETA}}New release: ${{ env.VERSION }}
+          username: ${{inputs.discord_webhook_name || 'GitHub Actions'}}
+          avatar-url: ${{inputs.discord_webhook_avatar || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'}}
+          embed-title: "NEW RELEASE: ${{ env.TAG_BETA }}${{ env.VERSION }}"
+          embed-description: |
             ${{ env.CHANGELOG}}
+          embed-color: 6130354
