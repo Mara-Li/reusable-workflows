@@ -25,6 +25,9 @@ on:
       GH_TOKEN:
         description: "Github token"
         required: true
+      DISCORD_WEBHOOK:
+        description: "Send a message to discord with the changelog using a discord webhook"
+        required: false
 
 jobs:
   echo-inputs:
@@ -43,6 +46,8 @@ jobs:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
       PRERELEASE: false
+      CHANGELOG: ""
+      TAG_BETA: ""
     steps:
       - name: verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
@@ -93,6 +98,9 @@ jobs:
           echo ${{ env.VERSION }}
           echo "## Release ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "PRERELEASE=$(node -p "require('./package.json').version.includes('-')")" >> $GITHUB_ENV
+      - name: Add beta text
+        if: ${{ fromJson(env.PRERELEASE) }}
+        run: echo "TAG_BETA='[BETA] '" >> $GITHUB_ENV
       - name: Create zip
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
@@ -114,19 +122,21 @@ jobs:
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
+      - name: Changelog to env
+        run: echo "CHANGELOG=$(cat CHANGELOG-LATEST.md)" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
-          PRELEASE: ${{ env.PRERELEASE }}
+          PRERELEASE: ${{ env.PRERELEASE }}
         with:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
           body_path: CHANGELOG-LATEST.md
           draft: false
-          prerelease: ${{ env.PRELEASE }}
+          prerelease: ${{ env.PRERELEASE }}
           token: "${{ secrets.GH_TOKEN }}"
           files: |
             ${{ inputs.PLUGIN_NAME }}.zip
@@ -151,3 +161,13 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}.zip
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
+      - name: Send discord message with changelog
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK || ''}}
+        if: ${{ env.DISCORD_WEBHOOK != '' }}
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            ## ${{env.TAG_BETA}}New release: ${{ env.VERSION }}
+            ${{ env.CHANGELOG}}

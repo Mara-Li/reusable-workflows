@@ -41,6 +41,9 @@ on:
       AUTHOR_NAME:
         description: "Author name"
         required: false
+      DISCORD_WEBHOOK:
+        description: "Send a message to discord with the changelog using a discord webhook"
+        required: false
 
 jobs:
   echo:
@@ -62,6 +65,7 @@ jobs:
     env:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
+      CHANGELOG: ""
 
     runs-on: ubuntu-latest
     steps:
@@ -122,9 +126,11 @@ jobs:
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
       - name: Create changelog
+        id: create-changelog
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
+          echo "CHANGELOG=$(cat CHANGELOG-LATEST.md)" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT }}
         uses: softprops/action-gh-release@v1
@@ -162,11 +168,22 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/manifest.json
       - name: Push updated changes
         run: git push --follow-tags origin ${{ inputs.BRANCH }}
+      - name: Send discord message with changelog
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK || ''}}
+        if: ${{ env.DISCORD_WEBHOOK != '' }}
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            ## New release: ${{ env.VERSION }}
+            ${{ env.CHANGELOG}}
   release-beta:
     if: ${{ fromJson(inputs.BETA) }}
     env:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
+      CHANGELOG: ""
     runs-on: ubuntu-latest
     steps:
       - name: Verify inputs for cache
@@ -235,6 +252,7 @@ jobs:
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
+          echo "CHANGELOG=$(cat CHANGELOG-LATEST.md)" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT }}
         uses: softprops/action-gh-release@v1
@@ -278,3 +296,13 @@ jobs:
           branch: ${{ inputs.BRANCH || 'master' }}
           author_name: ${{ secrets.AUTHOR_NAME || 'github-actions[bot]' }}
           author_email: ${{ secrets.AUTHOR_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}
+      - name: Send discord message with changelog
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK || ''}}
+        if: ${{ env.DISCORD_WEBHOOK != '' }}
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            ## [BETA] New release: ${{ env.VERSION }}
+            ${{ env.CHANGELOG}}
