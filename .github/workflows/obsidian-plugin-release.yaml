@@ -134,7 +134,7 @@ jobs:
         run: |
           CHANGELOG=$(cat CHANGELOG-LATEST.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo $CHANGELOG >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT}}

@@ -140,7 +140,7 @@ jobs:
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
           CHANGELOG=$(cat CHANGELOG-LATEST.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo $CHANGELOG >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT }}
@@ -268,7 +268,7 @@ jobs:
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
           CHANGELOG=$(cat CHANGELOG-LATEST.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo $CHANGELOG >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT }}
