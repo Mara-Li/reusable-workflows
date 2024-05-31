@@ -126,7 +126,11 @@ jobs:
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
       - name: Changelog to env
-        run: echo "CHANGELOG=$(cat CHANGELOG-LATEST.md)" >> $GITHUB_ENV
+        run: |
+          CHANGELOG=$(cat CHANGELOG-LATEST.md)
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(inputs.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1
