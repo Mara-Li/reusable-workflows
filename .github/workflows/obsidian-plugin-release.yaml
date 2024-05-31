@@ -6,7 +6,6 @@ on:
         description: "id of your plugin"
         required: true
         type: string
-
       SUBMODULE:
         description: "If your plugin is a submodule, set this to true"
         required: false
@@ -51,6 +50,7 @@ jobs:
       PRERELEASE: false
       CHANGELOG: ""
       TAG_BETA: ""
+      STYLE: false
     steps:
       - name: verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
@@ -131,8 +131,14 @@ jobs:
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+      - name: Get style
+        id: style
+        run: |
+          if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
+            echo "STYLE=true" >> $GITHUB_ENV
+          fi
       - name: Create Release with css
-        if: ${{ fromJson(inputs.STYLE) && !env.ACT}}
+        if: ${{ fromJson(env.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
@@ -151,7 +157,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
-        if: ${{ !fromJson(inputs.STYLE) && !env.ACT}}
+        if: ${{ !fromJson(env.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"

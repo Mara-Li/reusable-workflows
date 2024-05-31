@@ -6,7 +6,6 @@ on:
         description: "id of your plugin"
         required: true
         type: string
-
       BRANCH:
         description: "Main branch"
         type: string
@@ -126,8 +125,6 @@ jobs:
         run: |
           if [ -f "${{ inputs.PLUGIN_NAME }}/styles.css" ]; then
             echo "STYLE=true" >> $GITHUB_ENV
-          else
-            echo "STYLE=false" >> $GITHUB_ENV
           fi
       - name: Zip files
         run: |
