@@ -278,17 +278,16 @@ jobs:
           fi
       - name: build (npm)
         if: ${{ inputs.CACHE == 'npm' }}
-        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+        run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} -b
       - name: build (pnpm)
-        run: pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
+        run: pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }} -b
         if: ${{ inputs.CACHE == 'pnpm' }}
       - name: build (yarn)
-        run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
+        run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} -b
         if: ${{ inputs.CACHE == 'yarn' }}
       - name: Build (bun)
         if: ${{ inputs.CACHE == 'bun' }}
-        run: |
-          bun run build --output-dir ${{ inputs.PLUGIN_NAME }}
+        run: bun run build --output-dir ${{ inputs.PLUGIN_NAME }} -b
       - name: Zip files
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}

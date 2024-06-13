@@ -51,6 +51,7 @@ jobs:
       CHANGELOG: ""
       TAG_BETA: ""
       STYLE: false
+      BETA_BUILD: ""
     steps:
       - name: Verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
@@ -83,26 +84,6 @@ jobs:
       - name: Use bun
         if: ${{ inputs.CACHE == 'bun' }}
         uses: oven-sh/setup-bun@v1
-      - name: Build (npm)
-        if: ${{ inputs.CACHE == 'npm'}}
-        run: |
-          npm install
-          npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
-      - name: Build (yarn)
-        if: ${{ inputs.CACHE == 'yarn'}}
-        run: |
-          yarn install
-          yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
-      - name: build (pnpm)
-        if: ${{ inputs.CACHE == 'pnpm'}}
-        run: |
-          pnpm install
-          pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
-      - name: Build (bun)
-        if: ${{ inputs.CACHE == 'bun'}}
-        run: |
-          bun install
-          bun run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version
         id: tags
         run: |
@@ -110,6 +91,29 @@ jobs:
           echo ${{ env.VERSION }}
           echo "## Release ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "PRERELEASE=$(node -p "require('./package.json').version.includes('-')")" >> $GITHUB_ENV
+      - name: "Add beta cmd in build"
+        if: ${{ fromJson(env.PRERELEASE) }}
+        run: echo "BETA_BUILD='--beta'" >> $GITHUB_ENV
+      - name: Build (npm)
+        if: ${{ inputs.CACHE == 'npm'}}
+        run: |
+          npm install
+          npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+      - name: Build (yarn)
+        if: ${{ inputs.CACHE == 'yarn'}}
+        run: |
+          yarn install
+          yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+      - name: build (pnpm)
+        if: ${{ inputs.CACHE == 'pnpm'}}
+        run: |
+          pnpm install
+          pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+      - name: Build (bun)
+        if: ${{ inputs.CACHE == 'bun'}}
+        run: |
+          bun install
+          bun run build --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
       - name: Add beta text
         if: ${{ fromJson(env.PRERELEASE) }}
         run: echo "TAG_BETA='[BETA] '" >> $GITHUB_ENV
