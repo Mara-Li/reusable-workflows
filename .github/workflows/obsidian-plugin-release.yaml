@@ -12,7 +12,7 @@ on:
         type: boolean
         default: false
       CACHE:
-        description: "Cache to use (npm, pnpm, yarn)"
+        description: "Cache to use (npm, pnpm, yarn, bun)"
         required: false
         type: string
         default: "npm"
@@ -75,10 +75,14 @@ jobs:
         if: ${{ inputs.CACHE == 'yarn'}}
         run: npm install -g yarn
       - name: Use Node.js
+        if: ${{ inputs.CACHE != 'bun' }}
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: ${{ inputs.cache }}
+      - name: Install bun
+        if: ${{ inputs.CACHE == 'bun' }}
+        uses: oven-sh/setup-bun@v1
       - name: Build (npm)
         if: ${{ inputs.CACHE == 'npm'}}
         run: |
@@ -94,6 +98,11 @@ jobs:
         run: |
           pnpm install
           pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
+      - name: Build (bun)
+        if: ${{ inputs.CACHE == 'bun'}}
+        run: |
+          bun install
+          bun run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version
         id: tags
         run: |

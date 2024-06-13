@@ -22,7 +22,7 @@ on:
         type: boolean
         default: false
       CACHE:
-        description: "Cache to use (npm, pnpm, yarn)"
+        description: "Cache to use (npm, pnpm, yarn, bun)"
         required: false
         type: string
         default: "npm"
@@ -72,9 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Verify Inputs for cache
-        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun' }}
         run: |
-          echo "::error::CACHE must be one of npm, pnpm or yarn"
+          echo "::error::CACHE must be one of npm, pnpm, yarn or bun"
           exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
@@ -94,9 +94,13 @@ jobs:
         with:
           version: 9
       - uses: actions/setup-node@v3
+        if: ${{ inputs.CACHE != 'bun' }}
         with:
           node-version: 18
           cache: ${{ inputs.CACHE }}
+      - name: "Install bun"
+        if: ${{ inputs.CACHE == 'bun' }}
+        uses: oven-sh/setup-bun@v1
       - name: Install yarn
         if: ${{ inputs.CACHE == 'yarn' }}
         run: |
@@ -116,6 +120,12 @@ jobs:
           pnpm install
           pnpm run bump --ignore-scripts
           pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
+      - name: Install & build (bun)
+        if: ${{inputs.CACHE == 'bun'}}
+        run: |
+          bun install
+          bun run bump --ignore-scripts
+          bun run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version number
         run: |
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
@@ -200,7 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Verify inputs for cache
-        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
         run: |
           echo "::error::CACHE must be one of npm, pnpm or yarn"
           exit 1
@@ -208,7 +218,7 @@ jobs:
         if: ${{ inputs.SUBMODULE}}
         run: |
           echo "SUBMODULE=recursive" >> $GITHUB_ENV
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
@@ -221,27 +231,35 @@ jobs:
         if: ${{ inputs.CACHE == 'yarn' }}
         run: npm install -g yarn
       - uses: actions/setup-node@v3
+        if: ${{ inputs.CACHE != 'bun' }}
         with:
           node-version: 18
           cache: ${{ inputs.CACHE }}
-      - name: Install dependencies (npm)
-        run: npm install
+      - name: "Install bun"
+        if: ${{ inputs.CACHE == 'bun' }}
+        run: |
+          bun install
+
+      - name: Install & bump (npm)
         if: ${{ inputs.CACHE == 'npm' }}
-      - name: Install dependencies (pnpm)
-        run: pnpm install
-        if: ${{ inputs.CACHE == 'pnpm' }}
-      - name: Install dependencies (yarn)
-        run: yarn install
-        if: ${{ inputs.CACHE == 'yarn' }}
-      - name: Bump version beta (npm)
         run: |
+          npm install
           npm run bump --ignore-scripts -- --beta
-      - name: Bump version beta (pnpm)
+      - name: Install & bump (pnpm)
         run: |
-          pnpm run bump --ignore-scripts -- --beta
-      - name: Bump version beta (yarn)
+          pnpm install
+          pnpm run bump --beta --ignore-scripts
+        if: ${{ inputs.CACHE == 'pnpm' }}
+      - name: Install & bump (yarn)
         run: |
+          yarn install
           yarn run bump --ignore-scripts -- --beta
+        if: ${{ inputs.CACHE == 'yarn' }}
+      - name: Install & bump (bun)
+        run: |
+          bun install
+          bun run bump --beta --ignore-scripts
+        if: ${{ inputs.CACHE == 'bun' }}
       - name: Get version number
         run: |
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
@@ -263,6 +281,10 @@ jobs:
       - name: build (yarn)
         run: yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }}
         if: ${{ inputs.CACHE == 'yarn' }}
+      - name: Build (bun)
+        if: ${{ inputs.CACHE == 'bun' }}
+        run: |
+          bun run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Zip files
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
