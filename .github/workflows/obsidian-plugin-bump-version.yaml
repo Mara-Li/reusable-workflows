@@ -98,6 +98,9 @@ jobs:
         with:
           node-version: 18
           cache: ${{ inputs.CACHE }}
+      - name: write .env file for skipping bump
+        run: |
+          echo "SKIP_POST_BUMP=true" >> .env
       - name: "Install bun"
         if: ${{ inputs.CACHE == 'bun' }}
         uses: oven-sh/setup-bun@v1
@@ -106,7 +109,7 @@ jobs:
         run: |
           npm install -g yarn
           yarn install
-          yarn run bump --ignore-scripts
+          yarn run bump
           yarn run build -- --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Install dependencies (npm)
         if: ${{ inputs.CACHE == 'npm' }}
@@ -118,13 +121,13 @@ jobs:
         if: ${{ inputs.CACHE == 'pnpm' }}
         run: |
           pnpm install
-          pnpm run bump --ignore-scripts
+          pnpm run bump
           pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Install & build (bun)
         if: ${{inputs.CACHE == 'bun'}}
         run: |
           bun install
-          bun run bump --ignore-scripts
+          bun run bump
           bun run build --output-dir ${{ inputs.PLUGIN_NAME }}
       - name: Get version number
         run: |
@@ -237,28 +240,29 @@ jobs:
           cache: ${{ inputs.CACHE }}
       - name: "Install bun"
         if: ${{ inputs.CACHE == 'bun' }}
-        run: |
-          bun install
-
+        uses: oven-sh/setup-bun@v1
       - name: Install & bump (npm)
         if: ${{ inputs.CACHE == 'npm' }}
         run: |
           npm install
           npm run bump --ignore-scripts -- --beta
+      - name: set .env file
+        run: |
+          echo "SKIP_POST_BUMP=true" >> .env
       - name: Install & bump (pnpm)
         run: |
           pnpm install
-          pnpm run bump --beta --ignore-scripts
+          pnpm run bump --beta
         if: ${{ inputs.CACHE == 'pnpm' }}
       - name: Install & bump (yarn)
         run: |
           yarn install
-          yarn run bump --ignore-scripts -- --beta
+          yarn run bump -- --beta
         if: ${{ inputs.CACHE == 'yarn' }}
       - name: Install & bump (bun)
         run: |
           bun install
-          bun run bump --beta --ignore-scripts
+          bun run bump --beta
         if: ${{ inputs.CACHE == 'bun' }}
       - name: Get version number
         run: |
