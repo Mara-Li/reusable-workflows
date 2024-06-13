@@ -52,10 +52,10 @@ jobs:
       TAG_BETA: ""
       STYLE: false
     steps:
-      - name: verify inputs
-        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' }}
+      - name: Verify inputs
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
         run: |
-          echo "::error::CACHE must be one of npm, pnpm or yarn"
+          echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
           exit 1
       - name: Set to recursive
         if: ${{ inputs.SUBMODULE }}
@@ -80,7 +80,7 @@ jobs:
         with:
           node-version: 18
           cache: ${{ inputs.cache }}
-      - name: Install bun
+      - name: Use bun
         if: ${{ inputs.CACHE == 'bun' }}
         uses: oven-sh/setup-bun@v1
       - name: Build (npm)

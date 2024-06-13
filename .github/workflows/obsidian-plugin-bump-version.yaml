@@ -74,7 +74,7 @@ jobs:
       - name: Verify Inputs for cache
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun' }}
         run: |
-          echo "::error::CACHE must be one of npm, pnpm, yarn or bun"
+          echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
           exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
@@ -212,7 +212,7 @@ jobs:
       - name: Verify inputs for cache
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
         run: |
-          echo "::error::CACHE must be one of npm, pnpm or yarn"
+          echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
           exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
