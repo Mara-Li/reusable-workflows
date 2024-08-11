@@ -52,6 +52,7 @@ jobs:
       TAG_BETA: ""
       STYLE: false
       BETA_BUILD: ""
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
     steps:
       - name: Verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
@@ -122,6 +123,15 @@ jobs:
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
+      - name: Update manifest-beta.json in main branch
+        if: ${{ fromJson(env.PRERELEASE) && format('refs/heads/{0}', github.event.repository.default_branch) != env.BRANCH_NAME }}
+        run: |
+          git checkout ${{ github.event.repository.default_branch }}
+          git pull
+          npx rexreplace "version\": \".*?\"" "version\": \"$VERSION\"" -s -M -G -m -o "manifest-beta.json"
+          git add manifest-beta.json
+          git commit -m "Update manifest-beta.json"
+          git push
       - name: Delete release if workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !env.ACT }}
         continue-on-error: true
