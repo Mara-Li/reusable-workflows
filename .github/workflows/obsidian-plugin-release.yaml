@@ -52,7 +52,7 @@ jobs:
       TAG_BETA: ""
       STYLE: false
       BETA_BUILD: ""
-      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      BRANCH_NAME: ${{ github.event.base_ref || github.ref }}
     steps:
       - name: Verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
