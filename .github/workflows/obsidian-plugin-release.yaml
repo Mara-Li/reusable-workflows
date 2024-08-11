@@ -129,9 +129,11 @@ jobs:
           git fetch origin ${{ github.event.repository.default_branch }}
           git checkout ${{ github.event.repository.default_branch }}
           git pull
-          npx rexreplace "version\": \".*?\"" "version\": \"$VERSION\"" -s -M -G -m -o "manifest-beta.json"
+          npx rexreplace "version\": \".*?\"" "version\": \"${{env.VERSION}}\"" -s -M -G -m -o "manifest-beta.json"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add manifest-beta.json
-          git commit -m "Update manifest-beta.json"
+          git commit -m "chore: update manifest-beta.json"
           git push
       - name: Delete release if workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !env.ACT }}
