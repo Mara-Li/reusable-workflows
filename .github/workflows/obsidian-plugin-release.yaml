@@ -68,6 +68,14 @@ jobs:
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
+      - name: Pull from main 
+        if: ${{inputs.SUBMODULE}}
+        run: |
+          git submodule foreach --recursive '
+            BRANCH=$(git symbolic-ref --short HEAD || echo "main")
+            echo "Checking out and pulling latest changes for submodule: $name on branch $BRANCH"
+            git checkout $BRANCH && git pull
+          '
       - name: Install PNPM
         if: ${{ inputs.CACHE == 'pnpm'}}
         uses: pnpm/action-setup@v3
