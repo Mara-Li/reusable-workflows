@@ -68,7 +68,7 @@ jobs:
       VERSION: ""
       CHANGELOG: ""
       STYLE: false
-      BRANCH_NAME: ${{ github.event.base_ref || github.ref }}
+      BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH}}
     runs-on: ubuntu-latest
     steps:
       - name: Verify Inputs for cache
@@ -210,7 +210,7 @@ jobs:
       VERSION: ""
       CHANGELOG: ""
       STYLE: false
-      BRANCH_NAME: ${{ github.event.base_ref || github.ref }}
+      BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH}}
     runs-on: ubuntu-latest
     steps:
       - name: Verify inputs for cache
