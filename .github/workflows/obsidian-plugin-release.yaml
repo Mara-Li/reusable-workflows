@@ -6,6 +6,11 @@ on:
         description: "id of your plugin"
         required: true
         type: string
+      BRANCH:
+        description: "Main branch"
+        type: string
+        required: false
+        default: "master"
       SUBMODULE:
         description: "If your plugin is a submodule, set this to true"
         required: false
@@ -52,7 +57,7 @@ jobs:
       TAG_BETA: ""
       STYLE: false
       BETA_BUILD: ""
-      BRANCH_NAME: ${{ github.event.base_ref || github.ref }}
+      BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH}}
     steps:
       - name: Verify inputs
         if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
