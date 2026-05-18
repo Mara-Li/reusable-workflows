@@ -37,6 +37,11 @@ on:
         description: "Send a message to discord with the changelog using a discord webhook"
         required: false
 
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
 jobs:
   echo-inputs:
     runs-on: ubuntu-latest
@@ -176,7 +181,26 @@ jobs:
         run: |
           if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
             echo "STYLE=true" >> $GITHUB_ENV
+          else
+            echo "STYLE=false" >> $GITHUB_ENV
           fi
+      - name: Attest build provenance with css
+        if: ${{ fromJson(env.STYLE) && !env.ACT }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ inputs.PLUGIN_NAME }}.zip
+            ${{ inputs.PLUGIN_NAME }}/main.js
+            ${{ inputs.PLUGIN_NAME }}/manifest.json
+            ${{ inputs.PLUGIN_NAME }}/styles.css
+      - name: Attest build provenance without css
+        if: ${{ !fromJson(env.STYLE) && !env.ACT }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ inputs.PLUGIN_NAME }}.zip
+            ${{ inputs.PLUGIN_NAME }}/main.js
+            ${{ inputs.PLUGIN_NAME }}/manifest.json
       - name: Create Release with css
         if: ${{ fromJson(env.STYLE) && !env.ACT}}
         uses: softprops/action-gh-release@v1

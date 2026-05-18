@@ -48,6 +48,11 @@ on:
         description: "Send a message to discord with the changelog using a discord webhook"
         required: false
 
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
 jobs:
   echo:
     runs-on: ubuntu-latest
@@ -138,12 +143,31 @@ jobs:
         run: |
           if [ -f "${{ inputs.PLUGIN_NAME }}/styles.css" ]; then
             echo "STYLE=true" >> $GITHUB_ENV
+          else
+            echo "STYLE=false" >> $GITHUB_ENV
           fi
       - name: Zip files
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
+      - name: Attest build provenance with css
+        if: ${{ fromJson(env.STYLE) && !env.ACT }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ inputs.PLUGIN_NAME }}.zip
+            ${{ inputs.PLUGIN_NAME }}/main.js
+            ${{ inputs.PLUGIN_NAME }}/manifest.json
+            ${{ inputs.PLUGIN_NAME }}/styles.css
+      - name: Attest build provenance without css
+        if: ${{ !fromJson(env.STYLE) && !env.ACT }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ inputs.PLUGIN_NAME }}.zip
+            ${{ inputs.PLUGIN_NAME }}/main.js
+            ${{ inputs.PLUGIN_NAME }}/manifest.json
       - name: Create changelog
         id: create-changelog
         run: |
@@ -294,6 +318,23 @@ jobs:
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
+      - name: Attest build provenance with css
+        if: ${{ fromJson(env.STYLE) && !env.ACT }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ inputs.PLUGIN_NAME }}.zip
+            ${{ inputs.PLUGIN_NAME }}/main.js
+            ${{ inputs.PLUGIN_NAME }}/manifest.json
+            ${{ inputs.PLUGIN_NAME }}/styles.css
+      - name: Attest build provenance without css
+        if: ${{ !fromJson(env.STYLE) && !env.ACT }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ inputs.PLUGIN_NAME }}.zip
+            ${{ inputs.PLUGIN_NAME }}/main.js
+            ${{ inputs.PLUGIN_NAME }}/manifest.json
       - name: Create changelog
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
