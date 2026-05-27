@@ -179,7 +179,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
       - name: Create Release with css
         if: ${{ fromJson(env.STYLE) && !env.ACT }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
@@ -197,7 +197,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
         if: ${{ !fromJson(env.STYLE) && !env.ACT }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
@@ -358,7 +358,7 @@ jobs:
 
       - name: Create Release with css
         if: ${{ fromJson(env.STYLE) && !env.ACT }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
@@ -376,7 +376,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/styles.css
       - name: Create Release without css
         if: ${{ !fromJson(env.STYLE) && !env.ACT }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
           VERSION: "${{ env.VERSION }}"
