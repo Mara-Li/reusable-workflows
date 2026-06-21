@@ -95,7 +95,10 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
       - name: Install pnpm
         if: ${{ inputs.CACHE == 'pnpm' }}
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
+        with:
+          cache: true
+          version: latest
       - uses: actions/setup-node@v3
         if: ${{ inputs.CACHE != 'bun' }}
         with:
@@ -249,9 +252,10 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
       - name: Install pnpm
         if: ${{ inputs.CACHE == 'pnpm' }}
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: latest
+          cache: true
       - name: Install yarn
         if: ${{ inputs.CACHE == 'yarn' }}
         run: npm install -g yarn
