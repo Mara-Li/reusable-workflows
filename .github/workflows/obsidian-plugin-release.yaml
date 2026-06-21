@@ -89,8 +89,6 @@ jobs:
       - name: Install PNPM
         if: ${{ inputs.CACHE == 'pnpm'}}
         uses: pnpm/action-setup@v3
-        with:
-          version: 9
       - name: Install Yarn
         if: ${{ inputs.CACHE == 'yarn'}}
         run: npm install -g yarn
@@ -98,7 +96,6 @@ jobs:
         if: ${{ inputs.CACHE != 'bun' }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18
           cache: ${{ inputs.cache }}
       - name: Use bun
         if: ${{ inputs.CACHE == 'bun' }}
