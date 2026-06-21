@@ -99,7 +99,7 @@ jobs:
         with:
           cache: true
           version: latest
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         if: ${{ inputs.CACHE != 'bun' }}
         with:
           cache: ${{ inputs.CACHE }}
@@ -259,7 +259,7 @@ jobs:
       - name: Install yarn
         if: ${{ inputs.CACHE == 'yarn' }}
         run: npm install -g yarn
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         if: ${{ inputs.CACHE != 'bun' }}
         with:
           node-version: 18
