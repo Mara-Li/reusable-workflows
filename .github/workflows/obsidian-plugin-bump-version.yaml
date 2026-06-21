@@ -96,12 +96,9 @@ jobs:
       - name: Install pnpm
         if: ${{ inputs.CACHE == 'pnpm' }}
         uses: pnpm/action-setup@v3
-        with:
-          version: 9
       - uses: actions/setup-node@v3
         if: ${{ inputs.CACHE != 'bun' }}
         with:
-          node-version: 18
           cache: ${{ inputs.CACHE }}
       - name: write .env file for skipping bump
         run: |
