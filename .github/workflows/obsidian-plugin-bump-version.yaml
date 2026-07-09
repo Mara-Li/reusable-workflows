@@ -81,7 +81,7 @@ jobs:
         run: |
           echo "SUBMODULE=recursive" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
@@ -117,7 +117,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
