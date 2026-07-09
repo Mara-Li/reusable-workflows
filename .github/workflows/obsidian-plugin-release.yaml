@@ -43,8 +43,18 @@ permissions:
   attestations: write
 
 jobs:
-  echo-inputs:
+  prepare:
     runs-on: ubuntu-latest
+    env:
+      SUBMODULE: ${{ inputs.SUBMODULE }}
+      BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH }}
+    outputs:
+      NODE_FILE: ${{ steps.node_file.outputs.NODE_FILE }}
+      VERSION: ${{ steps.tags.outputs.VERSION }}
+      PRERELEASE: ${{ steps.tags.outputs.PRERELEASE }}
+      BETA_BUILD: ${{ steps.beta_build.outputs.BETA_BUILD }}
+      TAG_BETA: ${{ steps.beta_build.outputs.TAG_BETA }}
+      STYLE: ${{ steps.style.outputs.STYLE }}
     steps:
       - name: Echo inputs
         run: |
@@ -52,95 +62,153 @@ jobs:
           echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "SUBMODULE: ${{ inputs.SUBMODULE }}" >> $GITHUB_STEP_SUMMARY
           echo "CACHE: ${{ inputs.CACHE }}" >> $GITHUB_STEP_SUMMARY
-  release:
-    runs-on: ubuntu-latest
-    env:
-      SUBMODULE: ${{ inputs.SUBMODULE }}
-      VERSION: ""
-      PRERELEASE: false
-      CHANGELOG: ""
-      TAG_BETA: ""
-      STYLE: false
-      BETA_BUILD: ""
-      BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH}}
-    steps:
+
       - name: Verify inputs
-        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun' }}
         run: |
           echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
           exit 1
+
       - name: Set to recursive
         if: ${{ inputs.SUBMODULE }}
-        run: |
-          echo "SUBMODULE=recursive" >> $GITHUB_ENV
+        run: echo "SUBMODULE=recursive" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
-      - name: Pull from main 
-        if: ${{inputs.SUBMODULE}}
+
+      - name: Pull from main
+        if: ${{ inputs.SUBMODULE }}
         run: |
           git submodule foreach --recursive '
             BRANCH=$(git symbolic-ref --short HEAD || echo "main")
             echo "Checking out and pulling latest changes for submodule: $name on branch $BRANCH"
             git checkout $BRANCH && git pull
           '
+
+      - name: Get node version file
+        id: node_file
+        run: |
+          if [[ -f .nvmrc ]]; then
+            echo "NODE_FILE=.nvmrc" >> $GITHUB_OUTPUT
+          elif [[ -f .node-version ]]; then
+            echo "NODE_FILE=.node-version" >> $GITHUB_OUTPUT
+          else
+            echo "NODE_FILE=package.json" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get version
+        id: tags
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          PRERELEASE=$(node -p "require('./package.json').version.includes('-')")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "PRERELEASE=$PRERELEASE" >> $GITHUB_OUTPUT
+          echo "## Release $VERSION" >> $GITHUB_STEP_SUMMARY
+
+      - name: Add beta build/tag
+        id: beta_build
+        if: ${{ fromJson(steps.tags.outputs.PRERELEASE) }}
+        run: |
+          echo "BETA_BUILD=--beta" >> $GITHUB_OUTPUT
+          echo "TAG_BETA=[BETA] " >> $GITHUB_OUTPUT
+
+      - name: Get style
+        id: style
+        run: |
+          if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
+            echo "STYLE=true" >> $GITHUB_OUTPUT
+          else
+            echo "STYLE=false" >> $GITHUB_OUTPUT
+          fi
+
+  release:
+    runs-on: ubuntu-latest
+    needs: prepare
+    env:
+      SUBMODULE: ${{ inputs.SUBMODULE }}
+      VERSION: ${{ needs.prepare.outputs.VERSION }}
+      PRERELEASE: ${{ needs.prepare.outputs.PRERELEASE }}
+      CHANGELOG: ""
+      TAG_BETA: ${{ needs.prepare.outputs.TAG_BETA }}
+      STYLE: ${{ needs.prepare.outputs.STYLE }}
+      BETA_BUILD: ${{ needs.prepare.outputs.BETA_BUILD }}
+      BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH }}
+      NODE_FILE: ${{ needs.prepare.outputs.NODE_FILE }}
+    steps:
+      - name: Set to recursive
+        if: ${{ inputs.SUBMODULE }}
+        run: echo "SUBMODULE=recursive" >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: ${{ env.SUBMODULE }}
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Pull from main
+        if: ${{ inputs.SUBMODULE }}
+        run: |
+          git submodule foreach --recursive '
+            BRANCH=$(git symbolic-ref --short HEAD || echo "main")
+            echo "Checking out and pulling latest changes for submodule: $name on branch $BRANCH"
+            git checkout $BRANCH && git pull
+          '
+
       - name: Install PNPM
-        if: ${{ inputs.CACHE == 'pnpm'}}
+        if: ${{ inputs.CACHE == 'pnpm' }}
         uses: pnpm/action-setup@v6
         with:
           cache: true
           version: latest
+
       - name: Install Yarn
-        if: ${{ inputs.CACHE == 'yarn'}}
+        if: ${{ inputs.CACHE == 'yarn' }}
         run: npm install -g yarn
+
       - name: Use Node.js
         if: ${{ inputs.CACHE != 'bun' }}
         uses: actions/setup-node@v6
         with:
           cache: ${{ inputs.cache }}
+          node-version-file: ${{ env.NODE_FILE }}
+
       - name: Use bun
         if: ${{ inputs.CACHE == 'bun' }}
         uses: oven-sh/setup-bun@v1
-      - name: Get version
-        id: tags
-        run: |
-          echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-          echo ${{ env.VERSION }}
-          echo "## Release ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "PRERELEASE=$(node -p "require('./package.json').version.includes('-')")" >> $GITHUB_ENV
-      - name: "Add beta cmd in build"
-        if: ${{ fromJson(env.PRERELEASE) }}
-        run: echo "BETA_BUILD='--beta'" >> $GITHUB_ENV
+
       - name: Build (npm)
-        if: ${{ inputs.CACHE == 'npm'}}
+        if: ${{ inputs.CACHE == 'npm' }}
         run: |
           npm install
-          npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+          npm run build -- --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+
       - name: Build (yarn)
-        if: ${{ inputs.CACHE == 'yarn'}}
+        if: ${{ inputs.CACHE == 'yarn' }}
         run: |
           yarn install
-          yarn run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
-      - name: build (pnpm)
-        if: ${{ inputs.CACHE == 'pnpm'}}
+          yarn run build -- --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+
+      - name: Build (pnpm)
+        if: ${{ inputs.CACHE == 'pnpm' }}
         run: |
           pnpm install
           pnpm run build --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
+
       - name: Build (bun)
-        if: ${{ inputs.CACHE == 'bun'}}
+        if: ${{ inputs.CACHE == 'bun' }}
         run: |
           bun install
           bun run build --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
-      - name: Add beta text
-        if: ${{ fromJson(env.PRERELEASE) }}
-        run: echo "TAG_BETA='[BETA] '" >> $GITHUB_ENV
+
       - name: Create zip
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
           echo "### Files" >> $GITHUB_STEP_SUMMARY
           ls >> $GITHUB_STEP_SUMMARY
+
       - name: Update manifest-beta.json in main branch
         if: ${{ fromJson(env.PRERELEASE) && format('refs/heads/{0}', github.event.repository.default_branch) != env.BRANCH_NAME }}
         continue-on-error: true
@@ -148,42 +216,39 @@ jobs:
           git fetch origin ${{ github.event.repository.default_branch }}
           git checkout ${{ github.event.repository.default_branch }}
           git pull
-          npx rexreplace '"version": ".*?",' '"version": "${{env.VERSION}}",' .\manifest-beta.json
+          npx rexreplace '"version": ".*?",' '"version": "${{ env.VERSION }}",' .\manifest-beta.json
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add manifest-beta.json
           git commit -m "chore: update manifest-beta.json"
           git push
+
       - name: Delete release if workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !env.ACT }}
         continue-on-error: true
         run: gh release delete ${{ env.VERSION }} -R ${{ github.repository }} -y
         env:
           GH_TOKEN: ${{ github.token }}
+
       - name: Create changelog
         if: ${{ !fromJson(env.PRERELEASE) }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
+
       - name: Create beta changelog
         if: ${{ fromJson(env.PRERELEASE) }}
         run: |
           npx rexreplace "^.*?#+\s\[.*?\n.*?(?=\s*#+\s\[)" "_" -s -M -G -m -o "CHANGELOG-beta.md" > CHANGELOG-LATEST.md
           cat CHANGELOG-LATEST.md >> $GITHUB_STEP_SUMMARY
+
       - name: Changelog to env
         run: |
           CHANGELOG=$(cat CHANGELOG-LATEST.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-      - name: Get style
-        id: style
-        run: |
-          if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
-            echo "STYLE=true" >> $GITHUB_ENV
-          else
-            echo "STYLE=false" >> $GITHUB_ENV
-          fi
+
       - name: Attest build provenance with css
         if: ${{ fromJson(env.STYLE) && !env.ACT }}
         uses: actions/attest-build-provenance@v1
@@ -193,6 +258,7 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
+
       - name: Attest build provenance without css
         if: ${{ !fromJson(env.STYLE) && !env.ACT }}
         uses: actions/attest-build-provenance@v1
@@ -201,13 +267,12 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}.zip
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
+
       - name: Create Release with css
-        if: ${{ fromJson(env.STYLE) && !env.ACT}}
+        if: ${{ fromJson(env.STYLE) && !env.ACT }}
         uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
-          VERSION: "${{ env.VERSION }}"
-          PRERELEASE: ${{ env.PRERELEASE }}
         with:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
@@ -220,13 +285,12 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
             ${{ inputs.PLUGIN_NAME }}/styles.css
+
       - name: Create Release without css
-        if: ${{ !fromJson(env.STYLE) && !env.ACT}}
+        if: ${{ !fromJson(env.STYLE) && !env.ACT }}
         uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
-          VERSION: "${{ env.VERSION }}"
-          PRELEASE: ${{ env.PRERELEASE }}
         with:
           tag_name: "${{ env.VERSION }}"
           name: "${{ env.VERSION }}"
@@ -238,16 +302,17 @@ jobs:
             ${{ inputs.PLUGIN_NAME }}.zip
             ${{ inputs.PLUGIN_NAME }}/main.js
             ${{ inputs.PLUGIN_NAME }}/manifest.json
+
       - name: Send discord message with changelog
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK || ''}}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK || '' }}
         if: ${{ env.DISCORD_WEBHOOK != '' }}
         uses: tsickert/discord-webhook@v5.3.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-          username: ${{inputs.discord_webhook_name || 'GitHub Actions'}}
-          avatar-url: ${{inputs.discord_webhook_avatar || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'}}
+          username: ${{ inputs.discord_webhook_name || 'GitHub Actions' }}
+          avatar-url: ${{ inputs.discord_webhook_avatar || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png' }}
           embed-title: "NEW RELEASE: ${{ env.TAG_BETA }}${{ env.VERSION }}"
           embed-description: |
-            ${{ env.CHANGELOG}}
+            ${{ env.CHANGELOG }}
           embed-color: 6130354
