@@ -54,10 +54,14 @@ permissions:
   attestations: write
 
 jobs:
-  echo:
+  prepare:
     runs-on: ubuntu-latest
+    env:
+      SUBMODULE: ${{ inputs.SUBMODULE }}
+    outputs:
+      NODE_FILE: ${{ steps.node_file.outputs.NODE_FILE }}
     steps:
-      - name: Echo
+      - name: Echo inputs
         run: |
           echo "### Inputs" >> $GITHUB_STEP_SUMMARY
           echo "PLUGIN_NAME: ${{ inputs.PLUGIN_NAME }}" >> $GITHUB_STEP_SUMMARY
@@ -66,21 +70,45 @@ jobs:
           echo "SUBMODULE: ${{ inputs.SUBMODULE }}" >> $GITHUB_STEP_SUMMARY
           echo "CACHE: ${{ inputs.CACHE }}" >> $GITHUB_STEP_SUMMARY
 
+      - name: Verify Inputs for cache
+        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun' }}
+        run: |
+          echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
+          exit 1
+
+      - name: rename submodule env
+        if: ${{ inputs.SUBMODULE }}
+        run: |
+          echo "SUBMODULE=recursive" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: ${{ env.SUBMODULE }}
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Get node version file
+        id: node_file
+        run: |
+          if [[ -f .nvmrc ]]; then
+            echo "NODE_FILE=.nvmrc" >> $GITHUB_OUTPUT
+          elif [[ -f .node-version ]]; then
+            echo "NODE_FILE=.node-version" >> $GITHUB_OUTPUT
+          else
+            echo "NODE_FILE=package.json" >> $GITHUB_OUTPUT
+          fi
+
   release-latest:
+    needs: prepare
     if: ${{ !inputs.BETA }}
     env:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
       CHANGELOG: ""
       STYLE: false
+      NODE_FILE: ${{ needs.prepare.outputs.NODE_FILE }}
       BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH}}
     runs-on: ubuntu-latest
     steps:
-      - name: Verify Inputs for cache
-        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun' }}
-        run: |
-          echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
-          exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
         run: |
@@ -93,6 +121,14 @@ jobs:
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
+      - name: Pull latest submodule commits
+        if: ${{ inputs.SUBMODULE }}
+        run: |
+          git submodule foreach --recursive '
+            BRANCH=$(git symbolic-ref --short HEAD || echo "main")
+            echo "Checking out and pulling latest changes for submodule: $name on branch $BRANCH"
+            git checkout $BRANCH && git pull
+          '
       - name: Install pnpm
         if: ${{ inputs.CACHE == 'pnpm' }}
         uses: pnpm/action-setup@v6
@@ -103,6 +139,7 @@ jobs:
         if: ${{ inputs.CACHE != 'bun' }}
         with:
           cache: ${{ inputs.CACHE }}
+          node-version-file: ${{ env.NODE_FILE }}
       - name: write .env file for skipping bump
         run: |
           echo "SKIP_POST_BUMP=true" >> .env
@@ -227,21 +264,19 @@ jobs:
           embed-description: |
             ${{ env.CHANGELOG}}
           embed-color: 6130354
+
   release-beta:
+    needs: prepare
     if: ${{ fromJson(inputs.BETA) }}
     env:
       SUBMODULE: ${{ inputs.SUBMODULE }}
       VERSION: ""
       CHANGELOG: ""
       STYLE: false
+      NODE_FILE: ${{ needs.prepare.outputs.NODE_FILE }}
       BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH}}
     runs-on: ubuntu-latest
     steps:
-      - name: Verify inputs for cache
-        if: ${{ inputs.CACHE != 'npm' && inputs.CACHE != 'pnpm' && inputs.CACHE != 'yarn' && inputs.CACHE != 'bun'}}
-        run: |
-          echo "::error::CACHE must be one of npm, pnpm, yarn or bun. You provided ${{ inputs.CACHE }}"
-          exit 1
       - name: rename submodule env
         if: ${{ inputs.SUBMODULE}}
         run: |
@@ -250,6 +285,14 @@ jobs:
         with:
           submodules: ${{ env.SUBMODULE }}
           token: ${{ secrets.GH_TOKEN }}
+      - name: Pull latest submodule commits
+        if: ${{ inputs.SUBMODULE }}
+        run: |
+          git submodule foreach --recursive '
+            BRANCH=$(git symbolic-ref --short HEAD || echo "main")
+            echo "Checking out and pulling latest changes for submodule: $name on branch $BRANCH"
+            git checkout $BRANCH && git pull
+          '
       - name: Install pnpm
         if: ${{ inputs.CACHE == 'pnpm' }}
         uses: pnpm/action-setup@v6
@@ -262,7 +305,7 @@ jobs:
       - uses: actions/setup-node@v6
         if: ${{ inputs.CACHE != 'bun' }}
         with:
-          node-version: 18
+          node-version-file: ${{ env.NODE_FILE }}
           cache: ${{ inputs.CACHE }}
       - name: "Install bun"
         if: ${{ inputs.CACHE == 'bun' }}
@@ -356,7 +399,6 @@ jobs:
           git add manifest-beta.json
           git commit -m "chore: update manifest-beta.json"
           git push
-
       - name: Create Release with css
         if: ${{ fromJson(env.STYLE) && !env.ACT }}
         uses: softprops/action-gh-release@v3
