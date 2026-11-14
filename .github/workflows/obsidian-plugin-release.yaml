@@ -114,16 +114,6 @@ jobs:
         run: |
           echo "BETA_BUILD=--beta" >> $GITHUB_OUTPUT
           echo "TAG_BETA=[BETA] " >> $GITHUB_OUTPUT
-
-      - name: Get style
-        id: style
-        run: |
-          if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
-            echo "STYLE=true" >> $GITHUB_OUTPUT
-          else
-            echo "STYLE=false" >> $GITHUB_OUTPUT
-          fi
-
   release:
     runs-on: ubuntu-latest
     needs: prepare
@@ -202,7 +192,14 @@ jobs:
         run: |
           bun install
           bun run build --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
-
+      - name: Get style
+        id: style
+        run: |
+          if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
+            echo "STYLE=true" >> $GITHUB_OUTPUT
+          else
+            echo "STYLE=false" >> $GITHUB_OUTPUT
+          fi
       - name: Create zip
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}

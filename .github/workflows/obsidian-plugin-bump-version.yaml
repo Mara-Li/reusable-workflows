@@ -145,7 +145,7 @@ jobs:
           echo "SKIP_POST_BUMP=true" >> .env
       - name: "Install bun"
         if: ${{ inputs.CACHE == 'bun' }}
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
       - name: Install yarn
         if: ${{ inputs.CACHE == 'yarn' }}
         run: |
@@ -338,13 +338,6 @@ jobs:
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
           echo "### VERSION : ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo ${{ env.VERSION }}
-      - name: Get style
-        run: |
-          if [ -f "${{ inputs.PLUGIN_NAME }}/styles.css" ]; then
-            echo "STYLE=true" >> $GITHUB_ENV
-          else
-            echo "STYLE=false" >> $GITHUB_ENV
-          fi
       - name: build (npm)
         if: ${{ inputs.CACHE == 'npm' }}
         run: npm run build  -- --output-dir ${{ inputs.PLUGIN_NAME }} -b
@@ -357,6 +350,13 @@ jobs:
       - name: Build (bun)
         if: ${{ inputs.CACHE == 'bun' }}
         run: bun run build --output-dir ${{ inputs.PLUGIN_NAME }} -b
+      - name: Get style
+        run: |
+          if [ -f "${{ inputs.PLUGIN_NAME }}/styles.css" ]; then
+            echo "STYLE=true" >> $GITHUB_ENV
+          else
+            echo "STYLE=false" >> $GITHUB_ENV
+          fi
       - name: Zip files
         run: |
           zip -r ${{ inputs.PLUGIN_NAME }}.zip ${{ inputs.PLUGIN_NAME }}
