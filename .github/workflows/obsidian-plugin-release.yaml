@@ -54,7 +54,6 @@ jobs:
       PRERELEASE: ${{ steps.tags.outputs.PRERELEASE }}
       BETA_BUILD: ${{ steps.beta_build.outputs.BETA_BUILD }}
       TAG_BETA: ${{ steps.beta_build.outputs.TAG_BETA }}
-      STYLE: ${{ steps.style.outputs.STYLE }}
     steps:
       - name: Echo inputs
         run: |
@@ -123,7 +122,7 @@ jobs:
       PRERELEASE: ${{ needs.prepare.outputs.PRERELEASE }}
       CHANGELOG: ""
       TAG_BETA: ${{ needs.prepare.outputs.TAG_BETA }}
-      STYLE: ${{ needs.prepare.outputs.STYLE }}
+      STYLE: false
       BETA_BUILD: ${{ needs.prepare.outputs.BETA_BUILD }}
       BRANCH_NAME: ${{ github.event.base_ref || github.ref || inputs.BRANCH }}
       NODE_FILE: ${{ needs.prepare.outputs.NODE_FILE }}
@@ -193,12 +192,11 @@ jobs:
           bun install
           bun run build --output-dir ${{ inputs.PLUGIN_NAME }} ${{ env.BETA_BUILD }}
       - name: Get style
-        id: style
         run: |
           if [[ -f ${{ inputs.PLUGIN_NAME }}/styles.css ]]; then
-            echo "STYLE=true" >> $GITHUB_OUTPUT
+            echo "STYLE=true" >> $GITHUB_ENV
           else
-            echo "STYLE=false" >> $GITHUB_OUTPUT
+            echo "STYLE=false" >> $GITHUB_ENV
           fi
       - name: Create zip
         run: |
